@@ -182,18 +182,23 @@ export function useTimeEntries() {
       await supabase.from('activity_log').insert({
         user_code: entry.added_by,
         activity_type: 'manual_time_added',
-        description: `${entry.hours}h manuell hinzugefügt für ${entry.user_code}`,
-        metadata: { target_user: entry.user_code, hours: entry.hours },
+        description: `${entry.hours}h für ${entry.user_code} nachgetragen`,
+        metadata: {
+          target_user: entry.user_code,
+          hours: entry.hours,
+          backdated: true,
+          reason: entry.reason || null,
+        },
       })
 
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manualTimeEntries'] })
-      toast.success('Manuelle Zeit wurde hinzugefügt')
+      toast.success('Zeit nachgetragen – der Eintrag ist als „Nachgetragen“ markiert')
     },
     onError: () => {
-      toast.error('Fehler beim Hinzufügen der manuellen Zeit')
+      toast.error('Fehler beim Nachtragen der Zeit')
     },
   })
 
@@ -226,10 +231,10 @@ export function useTimeEntries() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manualTimeEntries'] })
-      toast.success('Manueller Eintrag wurde gelöscht')
+      toast.success('Nachgetragener Eintrag wurde gelöscht')
     },
     onError: () => {
-      toast.error('Fehler beim Löschen des manuellen Eintrags')
+      toast.error('Fehler beim Löschen des nachgetragenen Eintrags')
     },
   })
 

@@ -5,6 +5,20 @@ import { toast } from 'sonner'
 import { useAchievements } from './useAchievements'
 import { USERS } from '@/constants/users'
 
+// Felder der Bearbeitungs-Markierung. Fehlen sie in der Datenbank noch,
+// wird die Ausgabe trotzdem gespeichert (siehe updateExpenseMutation).
+const EDIT_TRACKING_FIELDS = ['edited_at', 'edited_by', 'edited_by_admin'] as const
+
+function isMissingEditColumnError(error: { code?: string; message?: string } | null) {
+  if (!error) return false
+  const message = error.message || ''
+  return (
+    error.code === 'PGRST204' ||
+    error.code === '42703' ||
+    EDIT_TRACKING_FIELDS.some((field) => message.includes(field))
+  )
+}
+
 export function useExpenses() {
   const queryClient = useQueryClient()
   const { checkAndAwardAchievements } = useAchievements()
@@ -157,12 +171,26 @@ export function useExpenses() {
       if (fetchError) throw fetchError
 
       // NOW: Update the expense
-      const { data, error } = await supabase
-        .from('expenses')
-        .update(expense)
-        .eq('id', expense.id)
-        .select()
-        .single()
+      const updateRow = (payload: Partial<Expense> & { id: string }) =>
+        supabase
+          .from('expenses')
+          .update(payload)
+          .eq('id', payload.id)
+          .select()
+          .single()
+
+      let { data, error } = await updateRow(expense)
+
+      // Fallback: Solange die edited_*-Spalten fehlen, ohne Markierung speichern
+      if (error && isMissingEditColumnError(error)) {
+        console.warn(
+          'Bearbeitungs-Markierung übersprungen – edited_*-Spalten fehlen in der Datenbank:',
+          error.message
+        )
+        const payloadWithoutTracking = { ...expense }
+        EDIT_TRACKING_FIELDS.forEach((field) => delete (payloadWithoutTracking as any)[field])
+        ;({ data, error } = await updateRow(payloadWithoutTracking))
+      }
 
       if (error) throw error
 
@@ -274,11 +302,18 @@ export function useExpenses() {
       }
 
       // Log activity
+      const expenseLabel = expense.description || 'ID ' + expense.id
       await supabase.from('activity_log').insert({
-        user_code: 'SYSTEM',
-        activity_type: 'expense_updated',
-        description: `Ausgabe aktualisiert: ${expense.description || 'ID ' + expense.id}`,
-        metadata: { expense_id: expense.id },
+        user_code: expense.edited_by || 'SYSTEM',
+        activity_type: expense.edited_by_admin ? 'expense_admin_edited' : 'expense_updated',
+        description: expense.edited_by_admin
+          ? `Ausgabe vom Admin bearbeitet: ${expenseLabel}`
+          : `Ausgabe aktualisiert: ${expenseLabel}`,
+        metadata: {
+          expense_id: expense.id,
+          edited_by: expense.edited_by || null,
+          edited_by_admin: !!expense.edited_by_admin,
+        },
       })
 
       return data

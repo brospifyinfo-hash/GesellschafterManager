@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { USERS } from '@/constants/users'
+import { History } from 'lucide-react'
 
 interface ManualTimeDialogProps {
   open: boolean
@@ -63,11 +64,19 @@ export function ManualTimeDialog({ open, onOpenChange }: ManualTimeDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Manuelle Zeit hinzufügen</DialogTitle>
+          <DialogTitle>Zeit nachtragen</DialogTitle>
           <DialogDescription>
-            Fügen Sie manuell Stunden für einen Gesellschafter hinzu
+            Tragen Sie Stunden nachträglich für einen Gesellschafter ein
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+          <History className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Der Eintrag wird überall sichtbar als <strong>„Nachgetragen“</strong> markiert –
+            mit deinem Namen, Zeitpunkt und Grund.
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -101,13 +110,17 @@ export function ManualTimeDialog({ open, onOpenChange }: ManualTimeDialogProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">Grund (optional)</Label>
+            <Label htmlFor="reason">Grund der Nachtragung</Label>
             <Textarea
               id="reason"
-              placeholder="z.B. Nachträgliche Erfassung, Projekt XYZ, etc."
+              placeholder="z.B. Einchecken vergessen, Arbeit vor Ort, Projekt XYZ"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              required
             />
+            <p className="text-xs text-muted-foreground">
+              Der Grund wird zusammen mit der Markierung angezeigt.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
@@ -120,7 +133,7 @@ export function ManualTimeDialog({ open, onOpenChange }: ManualTimeDialogProps) 
               Abbrechen
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Wird hinzugefügt...' : 'Hinzufügen'}
+              {isSubmitting ? 'Wird nachgetragen...' : 'Nachtragen'}
             </Button>
           </div>
         </form>

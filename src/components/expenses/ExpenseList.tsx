@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { EditExpenseDialog } from './EditExpenseDialog'
 import { ReceiptDialog } from './ReceiptDialog'
 import { ExpenseDetailDialog } from './ExpenseDetailDialog'
+import { EditedBadge } from '@/components/shared/AuditBadges'
 import { PaymentProofDialog } from './PaymentProofDialog'
 import { supabase } from '@/lib/supabase'
 import {
@@ -266,13 +267,18 @@ export function ExpenseList({ expenses, isLoading }: ExpenseListProps) {
                         <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mb-2">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-2">
                       <span>Erstellt: {formatDateTime(expense.created_at)}</span>
                       {creatorUser && (
                         <span className={`px-2 py-0.5 rounded bg-user-${creatorUser.color}/10`}>
                           von {creatorUser.name}
                         </span>
                       )}
+                      <EditedBadge
+                        editedAt={expense.edited_at}
+                        editedBy={expense.edited_by}
+                        editedByAdmin={expense.edited_by_admin}
+                      />
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {expense.category && (

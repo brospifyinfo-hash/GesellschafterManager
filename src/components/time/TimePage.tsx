@@ -26,13 +26,14 @@ export function TimePage() {
         <div>
           <h2 className="text-2xl font-bold">Zeiterfassung</h2>
           <p className="text-muted-foreground">
-            Übersicht aller erfassten Arbeitszeiten
+            Übersicht aller erfassten Arbeitszeiten – nachträglich eingetragene Stunden
+            sind als „Nachgetragen“ markiert
           </p>
         </div>
         {user.isAdmin && (
           <Button onClick={() => setIsManualDialogOpen(true)} className="gap-2">
             <Plus className="w-4 h-4" />
-            Manuelle Zeit
+            Zeit nachtragen
           </Button>
         )}
       </div>

@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Expense } from '@/types'
 import { formatCurrency, formatDateTime } from '@/lib/calculations'
 import { USERS } from '@/constants/users'
+import { EditedBadge } from '@/components/shared/AuditBadges'
 import { 
   Heart, 
   ThumbsUp, 
@@ -227,6 +228,11 @@ export function ExpenseDetailDialog({
                   {USERS.find((u) => u.code === expense.created_by)?.name}
                 </Badge>
                 <Badge variant="outline">{formatDateTime(expense.created_at)}</Badge>
+                <EditedBadge
+                  editedAt={expense.edited_at}
+                  editedBy={expense.edited_by}
+                  editedByAdmin={expense.edited_by_admin}
+                />
                 {expense.category && (
                   <Badge className="gap-1">
                     <Tag className="w-3 h-3" />

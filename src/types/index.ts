@@ -38,6 +38,10 @@ export type Expense = {
   payment_proofs?: Record<string, string> // user_code -> proof_url
   payment_type?: 'private' | 'company' // Privat oder Firmenkonto
   day_of_week?: string // Wochentag der Erstellung
+  // Bearbeitungs-Markierung: wird gesetzt, sobald die Ausgabe nachträglich geändert wird
+  edited_at?: string | null
+  edited_by?: string | null
+  edited_by_admin?: boolean | null
 }
 
 export type TimeEntry = {
@@ -49,6 +53,8 @@ export type TimeEntry = {
   created_at: string
 }
 
+// Nachgetragene Zeit: entsteht nicht durch Ein-/Auschecken, sondern wird
+// manuell eingetragen und deshalb überall als "Nachgetragen" markiert.
 export type ManualTimeEntry = {
   id: string
   user_code: string

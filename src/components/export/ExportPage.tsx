@@ -45,27 +45,52 @@ export function ExportPage() {
     })
 
     // Prepare expense data for CSV
-    const expenseData = filteredExpenses.map(e => ({
-      Datum: new Date(e.created_at).toLocaleDateString('de-DE'),
-      Beschreibung: e.description,
-      Betrag: e.total_amount,
-      'Erstellt von': e.created_by,
-      'Devid bezahlt': e.devid_paid ? 'Ja' : 'Nein',
-      'Dennis bezahlt': e.dennis_paid ? 'Ja' : 'Nein',
-      'Lara bezahlt': e.lukas_paid ? 'Ja' : 'Nein',
-      'Eren bezahlt': e.david_paid ? 'Ja' : 'Nein',
-    }))
-
-    // Prepare time data for CSV
-    const timeData = filteredTimeEntries.map(entry => {
-      const user = USERS.find((u) => u.code === entry.user_code)
+    const expenseData = filteredExpenses.map(e => {
+      const editor = USERS.find((u) => u.code === e.edited_by)
       return {
-        Name: user?.name,
-        'Check-in': new Date(entry.check_in).toLocaleString('de-DE'),
-        'Check-out': entry.check_out ? new Date(entry.check_out).toLocaleString('de-DE') : 'Aktiv',
-        'Dauer (h)': entry.duration_minutes ? (entry.duration_minutes / 60).toFixed(2) : 'Aktiv',
+        Datum: new Date(e.created_at).toLocaleDateString('de-DE'),
+        Beschreibung: e.description,
+        Betrag: e.total_amount,
+        'Erstellt von': e.created_by,
+        'Devid bezahlt': e.devid_paid ? 'Ja' : 'Nein',
+        'Dennis bezahlt': e.dennis_paid ? 'Ja' : 'Nein',
+        'Lara bezahlt': e.lukas_paid ? 'Ja' : 'Nein',
+        'Eren bezahlt': e.david_paid ? 'Ja' : 'Nein',
+        Bearbeitet: e.edited_at ? (e.edited_by_admin ? 'Ja (Admin)' : 'Ja') : 'Nein',
+        'Bearbeitet von': editor?.name || e.edited_by || '',
+        'Bearbeitet am': e.edited_at ? new Date(e.edited_at).toLocaleString('de-DE') : '',
       }
     })
+
+    // Prepare time data for CSV: Ein-/Auschecken UND nachgetragene Zeiten,
+    // klar getrennt über die Spalte "Art"
+    const timeData = [
+      ...filteredTimeEntries.map(entry => {
+        const user = USERS.find((u) => u.code === entry.user_code)
+        return {
+          Name: user?.name,
+          Art: 'Eingecheckt',
+          Zeitpunkt: new Date(entry.check_in).toLocaleString('de-DE'),
+          'Check-out': entry.check_out ? new Date(entry.check_out).toLocaleString('de-DE') : 'Aktiv',
+          'Dauer (h)': entry.duration_minutes ? (entry.duration_minutes / 60).toFixed(2) : 'Aktiv',
+          'Eingetragen von': '',
+          Grund: '',
+        }
+      }),
+      ...filteredManualEntries.map(entry => {
+        const user = USERS.find((u) => u.code === entry.user_code)
+        const addedBy = USERS.find((u) => u.code === entry.added_by)
+        return {
+          Name: user?.name,
+          Art: 'Nachgetragen',
+          Zeitpunkt: new Date(entry.created_at).toLocaleString('de-DE'),
+          'Check-out': '-',
+          'Dauer (h)': entry.hours.toFixed(2),
+          'Eingetragen von': `${addedBy?.name || entry.added_by}${addedBy?.isAdmin ? ' (Admin)' : ''}`,
+          Grund: entry.reason || '',
+        }
+      }),
+    ]
 
     // Export both files
     exportToCSV(expenseData, `ausgaben_${startDate}_${endDate}`)
@@ -111,6 +136,9 @@ export function ExportPage() {
       summary: {
         total_expenses: filteredExpenses.reduce((sum, e) => sum + e.total_amount, 0),
         total_time_hours: filteredTimeEntries.reduce((sum, e) => sum + (e.duration_minutes || 0) / 60, 0),
+        backdated_time_hours: filteredManualEntries.reduce((sum, e) => sum + e.hours, 0),
+        edited_expenses: filteredExpenses.filter((e) => !!e.edited_at).length,
+        admin_edited_expenses: filteredExpenses.filter((e) => !!e.edited_by_admin).length,
       },
     }
 

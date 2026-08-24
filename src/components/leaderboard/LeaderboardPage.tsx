@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTimeEntries } from '@/hooks/useTimeEntries'
 import { USERS } from '@/constants/users'
-import { Trophy, Medal, Crown, Calendar, TrendingUp, Clock } from 'lucide-react'
+import { Trophy, Medal, Crown, Calendar, TrendingUp, Clock, History } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 interface MonthlyStats {
   userCode: string
   hours: number
+  /** Anteil der Stunden, der nachgetragen wurde (kein Ein-/Auschecken) */
+  backdatedHours: number
   sessions: number
   rank: number
 }
@@ -71,6 +73,7 @@ export function LeaderboardPage() {
       return {
         userCode: user.code,
         hours: regularHours + manualHours,
+        backdatedHours: manualHours,
         sessions: userTimeEntries.length,
         rank: 0
       }
@@ -220,6 +223,15 @@ export function LeaderboardPage() {
                       {stat.sessions > 0 && (
                         <span>
                           Ø {(stat.hours / stat.sessions).toFixed(1)}h
+                        </span>
+                      )}
+                      {stat.backdatedHours > 0 && (
+                        <span
+                          className="flex items-center gap-1 text-amber-700 dark:text-amber-300"
+                          title="Diese Stunden wurden nachträglich eingetragen"
+                        >
+                          <History className="w-3 h-3" />
+                          {stat.backdatedHours.toFixed(1)}h nachgetragen
                         </span>
                       )}
                     </div>

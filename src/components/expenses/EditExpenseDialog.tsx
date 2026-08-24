@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Expense, SplitPayment } from '@/types'
-import { Plus, Trash2, Users } from 'lucide-react'
+import { Plus, Trash2, Users, Pencil } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import {
@@ -118,6 +118,10 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
         total_amount: totalAmount,
         amount_per_person: totalAmount / 4,
         split_payments: splitPayments.length > 0 ? splitPayments : null,
+        // Bearbeitung markieren, damit für alle sichtbar ist, wer geändert hat
+        edited_at: new Date().toISOString(),
+        edited_by: user?.code ?? null,
+        edited_by_admin: !!user?.isAdmin,
       })
       onOpenChange(false)
       toast.success('Ausgabe aktualisiert!')
@@ -138,6 +142,15 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
             Bearbeiten Sie die Details und Split-Zahlungen dieser Ausgabe
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-start gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3 text-sm text-orange-700 dark:text-orange-300">
+          <Pencil className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Diese Ausgabe wird nach dem Speichern sichtbar als
+            {user?.isAdmin ? ' „Vom Admin bearbeitet“' : ' „Bearbeitet“'} markiert &ndash; mit
+            Name und Zeitpunkt.
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

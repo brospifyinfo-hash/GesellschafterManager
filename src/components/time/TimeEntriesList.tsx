@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Trash2, Clock } from 'lucide-react'
 import { formatDateTime, formatHours } from '@/lib/calculations'
 import { USERS } from '@/constants/users'
+import { BackdatedBadge } from '@/components/shared/AuditBadges'
 import { toast } from 'sonner'
 
 export function TimeEntriesList() {
@@ -39,9 +40,12 @@ export function TimeEntriesList() {
       .filter(e => e.user_code === u.code)
       .reduce((sum, e) => sum + e.hours, 0)
     
-    acc[u.code] = (regularMinutes / 60) + manualHours
+    acc[u.code] = {
+      total: regularMinutes / 60 + manualHours,
+      backdated: manualHours,
+    }
     return acc
-  }, {} as Record<string, number>)
+  }, {} as Record<string, { total: number; backdated: number }>)
 
   if (isLoading) {
     return (
@@ -61,7 +65,12 @@ export function TimeEntriesList() {
               {u.code}
             </div>
             <p className="text-sm text-muted-foreground">{u.name}</p>
-            <p className="text-xl font-bold">{formatHours(userTotals[u.code])}</p>
+            <p className="text-xl font-bold">{formatHours(userTotals[u.code].total)}</p>
+            {userTotals[u.code].backdated > 0 && (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                davon {formatHours(userTotals[u.code].backdated)} nachgetragen
+              </p>
+            )}
           </Card>
         ))}
       </div>
@@ -133,7 +142,10 @@ export function TimeEntriesList() {
               const addedByUser = USERS.find((u) => u.code === entry.added_by)
               
               return (
-                <Card key={entry.id} className="glass apple-shadow p-6 border-dashed">
+                <Card
+                  key={entry.id}
+                  className="glass apple-shadow p-6 border-dashed border-amber-500/50 bg-amber-500/[0.04]"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {entryUser && (
@@ -142,12 +154,18 @@ export function TimeEntriesList() {
                         </div>
                       )}
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <p className="font-semibold">{entryUser?.name}</p>
-                          <Badge variant="outline">Manuell</Badge>
+                          <BackdatedBadge
+                            addedBy={entry.added_by}
+                            addedAt={entry.created_at}
+                            reason={entry.reason}
+                          />
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Hinzugefügt am {formatDateTime(entry.created_at)} von {addedByUser?.name}
+                          Nicht eingecheckt – nachgetragen am {formatDateTime(entry.created_at)} von{' '}
+                          {addedByUser?.name || entry.added_by}
+                          {addedByUser?.isAdmin ? ' (Admin)' : ''}
                         </p>
                         {entry.reason && (
                           <p className="text-sm text-muted-foreground italic">
@@ -158,7 +176,10 @@ export function TimeEntriesList() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <p className="font-bold text-lg">{formatHours(entry.hours)}</p>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">{formatHours(entry.hours)}</p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300">nachgetragen</p>
+                      </div>
                       
                       {user.isAdmin && (
                         <Button

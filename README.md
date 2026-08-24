@@ -29,7 +29,7 @@ Eine umfassende Finanz- und Zeitverwaltungsplattform im Apple-Style für vier Ge
 #### 🕒 Arbeitszeit-Erfassung
 - Einchecken/Auschecken System
 - Automatische Berechnung der Arbeitsdauer
-- Admin kann manuelle Zeiten hinzufügen
+- Admin kann Zeiten nachtragen – jeder nachgetragene Eintrag wird sichtbar als **„Nachgetragen“** markiert (Name, Zeitpunkt, Grund)
 - Gesamtarbeitszeit je Gesellschafter
 
 #### 💰 Umsatzverteilung
@@ -114,7 +114,7 @@ Eine umfassende Finanz- und Zeitverwaltungsplattform im Apple-Style für vier Ge
 #### Admin (nur Devid)
 - Einträge löschen & bearbeiten
 - Umsätze eintragen & verwalten
-- Manuelle Zeiten hinzufügen
+- Zeiten nachtragen (wird als „Nachgetragen“ markiert)
 - Auszahlungen vornehmen
 - Steuererklärungen erstellen
 - Benutzerstatistiken exportieren
@@ -150,6 +150,16 @@ Eine umfassende Finanz- und Zeitverwaltungsplattform im Apple-Style für vier Ge
 - Automatische Berechnung der Schulden
 - Andere schulden an die Zahler (nicht untereinander)
 - Getrennte Anzeige: Privat vs. Firmenkonto
+
+#### Nachvollziehbarkeit / Markierungen
+- **„Nachgetragen“**: Zeiten, die nicht per Ein-/Auschecken entstanden sind, tragen überall
+  ein Badge – in der Zeitenliste, in den Stundensummen („davon Xh nachgetragen“), im Activity
+  Log und im CSV/JSON-Export (Spalte „Art“). Wurde die Zeit von einem Admin eingetragen,
+  steht dort „Nachgetragen (Admin)“.
+- **„Vom Admin bearbeitet“**: Wird eine Ausgabe nachträglich über den Bearbeiten-Dialog
+  geändert, wird sie mit Name und Zeitpunkt markiert (`edited_at`, `edited_by`,
+  `edited_by_admin`). Das reine Abhaken einer Zahlung zählt nicht als Bearbeitung.
+- Beide Markierungen sind für alle Gesellschafter sichtbar, nicht nur für den Admin.
 
 #### Ghost-Mode (Admin)
 - Admin kann als andere User agieren
@@ -226,6 +236,11 @@ Eine umfassende Finanz- und Zeitverwaltungsplattform im Apple-Style für vier Ge
 - `subscriptions` - Abonnements
 - `achievements` - User-Achievements
 - `user_profiles` - Profile mit Zahlungsmethoden
+
+**Migrationen**: `supabase/migrations/20260824_add_edit_tracking.sql` ergänzt
+`expenses.edited_at`, `expenses.edited_by` und `expenses.edited_by_admin`.
+Ohne diese Migration speichert die App weiterhin normal, nur die Bearbeitungs-Markierung
+bleibt leer.
 
 **Storage Buckets**:
 - `receipts` - Rechnungsbelege
